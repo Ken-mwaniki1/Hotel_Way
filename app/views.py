@@ -388,38 +388,47 @@ def order_success(request, order_id):
 
     return render(request, 'main/order_success.html', context)
 
+
 def add_reservation(request):
     if request.method == 'POST':
         form = ReservationForm(request.POST)
         if form.is_valid():
+            # Save the reservation form to create a new reservation instance
             reservation = form.save()
 
-            # Calculate reservation cost
-            room_price = reservation.room.price if reservation.room else 0
-            num_days = (reservation.check_out_date - reservation.check_in_date).days
-            total_cost = room_price * num_days
+            # Generate JSON for order items with quantity set to '1'
+            order_items_json = json.dumps([{
+                'id': reservation.room.id if reservation.room else None,
+                'name': f"{reservation.room.room_type} Room",
+                'quantity': '1',  # Set the quantity to '1'
+                'price': reservation.room.price,
+            }])
 
-            # Create an associated order
+            # Create an order associated with the reservation
             order = Order.objects.create(
                 customer_name=reservation.name,
-                order_items=json.dumps([{
-                    'id': reservation.room.id if reservation.room else None,
-                    'name': f"{reservation.room.room_type} Room",
-                    'quantity': num_days,
-                    'price': room_price,
-                }]),
-                items=f"Reservation for {reservation.room_type}",
+                order_items=order_items_json,
+                items=f"Reservation for {reservation.room_type} Room",
                 status='pending',
-                payment_status='order_not_served'
+                payment_status='order_not_served',
+                guest=reservation.guest,
+                customer=reservation.customer  # Make sure this is set correctly
             )
-            return redirect('main:order_success', order_id=order.id)
-    else:
-        form = ReservationForm()
 
-    context = {
-        'form': form,
-    }
-    return render(request, 'main/reservations.html', context)
+            # Redirect to the order confirmation page with the order ID
+            messages.success(request, "Reservation made successfully. Redirecting to order confirmation...")
+            return redirect('main:order_confirmation', order_id=order.id)
+
+        else:
+            # Handle invalid form submission
+            messages.error(request, "There was an error with your reservation form.")
+            return render(request, 'main/reservations.html', {'form': form})
+
+    else:
+        # Display the reservation form for GET requests
+        form = ReservationForm()
+        return render(request, 'main/reservations.html', {'form': form})
+
 
 def get_available_rooms(request):
     room_type = request.GET.get('room_type')
