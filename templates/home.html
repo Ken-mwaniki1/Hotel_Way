@@ -1,0 +1,47 @@
+{% extends 'template_base.html' %}
+
+{% block title %}Welcome to Hotel Way{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="jumbotron">
+        <h1 class="display-4">Welcome to Hotel Way!</h1>
+        <p class="lead">Experience luxury and comfort in the heart of the city.</p>
+        <hr class="my-4">
+        <p>Discover our exquisite rooms, world-class amenities, and exceptional service.</p>
+        <a class="btn btn-primary btn-lg" href="{% url 'add_reservation' %}" role="button">Book Your Stay</a>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <img src="..." class="card-img-top" alt="Room Image"> 
+                <div class="card-body">
+                    <h5 class="card-title">Luxurious Rooms</h5>
+                    <p class="card-text">Indulge in our elegantly designed rooms with modern amenities and breathtaking views.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="..." class="card-img-top" alt="Dining Image"> 
+                <div class="card-body">
+                    <h5 class="card-title">Fine Dining</h5>
+                    <p class="card-text">Savor delectable cuisine prepared by our world-class chefs in our elegant dining spaces.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="..." class="card-img-top" alt="Amenities Image"> 
+                <div class="card-body">
+                    <h5 class="card-title">World-Class Amenities</h5>
+                    <p class="card-text">Enjoy a range of amenities, including a spa, fitness center, swimming pool, and more.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

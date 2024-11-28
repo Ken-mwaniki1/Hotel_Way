@@ -1,0 +1,115 @@
+{% extends 'template_base.html' %}
+
+{% block title %}Our Menu - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center">Our Menu</h2>
+
+    <div class="row">
+        {% for item in menu_items %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" width="200px" height="200px" class="card-img-top" alt="{{ item.name }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title item-name" data-item-id="{{ item.id }}">{{ item.name }}</h5> 
+                    <p class="card-text">{{ item.description }}</p>
+                    <p class="card-text"><strong>Ksh {{ item.price }}</strong></p>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control item-quantity" value="0" min="0"
+                            data-item-id="{{ item.id }}" data-item-price="{{ item.price }}">
+                        <button class="btn btn-outline-secondary add-to-cart" type="button"
+                            data-item-id="{{ item.id }}">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h3 class="card-title">Cart</h3>
+            <ul id="cart-items" class="list-group">
+            </ul>
+            <p class="text-end mt-3">
+                <strong>Total: Ksh <span id="cart-total">0</span></strong>
+            </p>
+            <form method="post" action="{% url 'main:menu'%}"> 
+                {% csrf_token %}
+                <input type="hidden" name="customer_name" value="{{ user.get_full_name }}"> 
+                <input type="hidden" name="order_items" id="order_items_field"> 
+                <button type="submit" class="btn btn-primary">Place Order</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const cartItemsList = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+    const orderItemsField = document.getElementById('order_items_field'); 
+    let cart = {};
+
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', () => {
+            const itemId = button.dataset.itemId;
+            const quantityInput = button.previousElementSibling;
+            const quantity = parseInt(quantityInput.value);
+
+            if (quantity > 0) {
+                addToCart(itemId, quantity);
+                quantityInput.value = 0; 
+            }
+        });
+    });
+
+    function addToCart(itemId, quantity) {
+        if (cart[itemId]) {
+            cart[itemId].quantity += quantity;
+        } else {
+            // Fetch item name using the data-item-id attribute
+            const itemName = document.querySelector(`.item-name[data-item-id="${itemId}"]`).textContent;
+
+            const itemPrice = parseFloat(document.querySelector(`.item-quantity[data-item-id="${itemId}"]`).dataset.itemPrice);
+            cart[itemId] = { quantity, price: itemPrice ,  name: itemName };
+        }
+        updateCartDisplay();
+    }
+
+    function updateCartDisplay() {
+        cartItemsList.innerHTML = ''; 
+        let totalPrice = 0;
+
+        for (const itemId in cart) {
+            const item = cart[itemId];
+            const listItem = document.createElement('li');
+            listItem.classList.add('list-group-item');
+            listItem.textContent = `${item.quantity} x ${item.name} - Ksh ${(item.quantity * item.price).toFixed(2)}`;
+            cartItemsList.appendChild(listItem);
+            totalPrice += item.quantity * item.price;
+        }
+
+        cartTotal.textContent = totalPrice.toFixed(2);
+
+        
+        const orderItems = Object.entries(cart).map(([itemId, item]) => `${itemId}:${item.quantity}`);
+        orderItemsField.value = orderItems.join(','); 
+        
+        const selectedItems = [];
+        for (const itemId in cart) {
+            const item = cart[itemId];
+            selectedItems.push({
+                id: itemId,
+                name: item.name, 
+                quantity: item.quantity,
+                price: item.price
+            });
+        }
+        
+        orderItemsField.value = JSON.stringify(selectedItems);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends 'base_manager.html' %}
+
+{% block title %}Menu Item Management - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center">Menu Item Management</h2>
+
+    <form id="order-form" method="post" action="{% url 'main:order' %}">
+        {% csrf_token %}
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Actions</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in menu_items %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.price }}</td>
+                    <td>
+                        <input type="number" name="quantity_{{ item.id }}" class="form-control item-quantity"
+                            value="0" min="0" data-item-id="{{ item.id }}" data-item-price="{{ item.price }}">
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editItemModal{{ item.id }}">
+                            Edit
+                        </button>
+                        <a href="{% url 'manager:delete_item' item.id %}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+
+                
+                <div class="modal fade" id="editItemModal{{ item.id }}" tabindex="-1" aria-labelledby="editItemModalLabel{{ item.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editItemModalLabel{{ item.id }}">Edit Item {{ item.name }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form method="post" enctype="multipart/form-data"> 
+                                    {% csrf_token %}
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    {{ form.as_p }}
+                                    <button type="submit" name="edit_item" class="btn btn-primary">Save changes</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3 class="mt-4">Cart</h3>
+        <ul id="cart-items" class="list-group">
+            </ul>
+
+        <p class="text-end mt-3">
+            <strong>Total: <span id="cart-total">0</span></strong>
+        </p>
+
+        <button type="submit" class="btn btn-primary">Place Order</button>
+    </form>
+</div>
+
+<script>
+    const cartItemsList = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+    const orderForm = document.getElementById('order-form');
+    let cart = {};
+
+    orderForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        
+        const formData = new FormData(orderForm);
+        const orderedItems = [];
+
+        for (const [key, value] of formData.entries()) {
+            if (key.startsWith('quantity_') && parseInt(value) > 0) {
+                const itemId = key.replace('quantity_', '');
+                orderedItems.push(itemId);
+            }
+        }
+
+        
+        const orderItemsInput = document.createElement('input');
+        orderItemsInput.type = 'hidden';
+        orderItemsInput.name = 'order_items';
+        orderItemsInput.value = orderedItems.join(',');
+        orderForm.appendChild(orderItemsInput);
+
+        
+        orderForm.submit();
+    });
+
+    document.querySelectorAll('.item-quantity').forEach(input => {
+        input.addEventListener('change', (event) => {
+            const itemId = event.target.dataset.itemId;
+            const itemPrice = parseFloat(event.target.dataset.itemPrice);
+            const quantity = parseInt(event.target.value);
+
+            if (quantity > 0) {
+                cart[itemId] = { quantity, price: itemPrice };
+            } else {
+                delete cart[itemId];
+            }
+
+            updateCartDisplay();
+        });
+    });
+
+    function updateCartDisplay() {
+        cartItemsList.innerHTML = ''; 
+        let totalPrice = 0;
+
+        for (const itemId in cart) {
+            const item = cart[itemId];
+            const listItem = document.createElement('li');
+            listItem.classList.add('list-group-item');
+            listItem.textContent = `${item.quantity} x ${itemId} - $${(item.quantity * item.price).toFixed(2)}`;
+            cartItemsList.appendChild(listItem);
+            totalPrice += item.quantity * item.price;
+        }
+
+        cartTotal.textContent = totalPrice.toFixed(2);
+    }
+</script>
+{% endblock %}

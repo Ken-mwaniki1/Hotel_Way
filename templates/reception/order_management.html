@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Management - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Order Management</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Order ID</th>
+                <th scope="col">Customer</th>
+                <th scope="col">Items Ordered</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer.name }}</td> 
+                <td>{{ order.items }}</td> 
+                <td>{{ order.status }}</td>
+                <td>
+                    <a href="{% url 'reception:send_to_kitchen' order.id %}" class="btn btn-success">Send to Kitchen</a> 
+                    <a href="{% url 'reception:mark_as_complete' order.id %}" class="btn btn-primary">Mark as Complete</a> 
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

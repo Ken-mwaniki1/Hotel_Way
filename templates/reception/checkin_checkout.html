@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Guest Check-in/Check-out - Hotel Way{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ... your existing CSS ... */
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+
+    <h2 class="text-center mb-4">Guest Check-in/Check-out</h2>
+
+    <div class="reservation-info">
+        <h4>Reservation Details</h4>
+        <p><strong>Guest Name:</strong> {{ reservation.guest.name }}</p> 
+        <p><strong>Room Number:</strong> {{ reservation.room.room_number }}</p>
+        <p><strong>Check-in Date:</strong> {{ reservation.check_in_date }}</p>
+        <p><strong>Check-out Date:</strong> {{ reservation.check_out_date }}</p>
+        <p><strong>Status:</strong> {{ reservation.status }}</p> 
+    </div>
+
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ... your existing JavaScript ...
+</script>
+{% endblock %}

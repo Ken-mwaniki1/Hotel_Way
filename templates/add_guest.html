@@ -1,0 +1,14 @@
+{% extends 'template_base.html' %}  
+
+{% block title %}Add Guest - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Add New Guest</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}  
+        <button type="submit" class="btn btn-primary">Add Guest</button>
+    </form>
+</div>
+{% endblock %}

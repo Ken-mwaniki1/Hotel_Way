@@ -1,0 +1,38 @@
+{% extends 'template_base.html' %}
+
+{% block title %}Our Rooms - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center">Our Rooms</h2>
+
+    <div class="row">
+        {% for room in rooms %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <img src="{{ room.image_url }}" class="card-img-top" alt="{{ room.name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ room.name }}</h5>
+                    <p class="card-text">{{ room.description }}</p> 
+                    <p class="card-text">
+                        <strong>${{ room.price }}</strong> per night
+                    </p>
+                    <ul class="list-unstyled">
+                        <li>Capacity: {{ room.capacity }} guests</li> 
+                        <li>
+                            Amenities:
+                            {% if room.amenities %}
+                            {{ room.amenities }}
+                            {% else %}
+                            None
+                            {% endif %}
+                        </li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Book Now</a> 
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

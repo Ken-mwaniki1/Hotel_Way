@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Check-in Successful - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Check-in Successful!</h2>
+
+    <div class="alert alert-success" role="alert">
+        Guest has been successfully checked in.
+    </div>
+
+    <p class="text-center mt-4">
+        <a href="{% url 'reception:reservation_management' %}" class="btn btn-primary">Back to Reservations</a>
+    </p>
+
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'main/main_base.html' %}
+
+{% block title %}Reservation Successful - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center">Reservation Successful!</h2>
+
+    <div class="alert alert-success" role="alert">
+        Thank you for your reservation! We have received your request and will be in touch shortly to confirm the details.
+    </div>
+
+    <p class="text-center mt-4">
+        <a href="{% url 'index' %}" class="btn btn-primary">Back to Home</a> 
+    </p>
+</div>
+{% endblock %}

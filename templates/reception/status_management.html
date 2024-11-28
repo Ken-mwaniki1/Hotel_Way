@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Status Management - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Status Management</h2>
+
+    <h3>Reservations</h3>
+    <div class="row">
+        <div class="col-md-4">
+            <h4>Pending</h4>
+            <ul>
+                {% for reservation in pending_reservations %}
+                    <li>{{ reservation.guest.name }} - {{ reservation.room.room_number }}</li> 
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h4>Checked In</h4>
+            <ul>
+                {% for reservation in checked_in_reservations %}
+                    <li>{{ reservation.guest.name }} - {{ reservation.room.room_number }}</li> 
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h4>Cancelled</h4>
+            <ul>
+                {% for reservation in cancelled_reservations %}
+                    <li>{{ reservation.guest.name }} - {{ reservation.room.room_number }}</li> 
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <h3 class="mt-5">Orders</h3>
+    <div class="row">
+        <div class="col-md-4">
+            <h4>Pending</h4>
+            <ul>
+                {% for order in pending_orders %}
+                    <li>Order #{{ order.id }} - {{ order.customer.name }}</li> 
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h4>In Progress</h4>
+            <ul>
+                {% for order in in_progress_orders %}
+                    <li>Order #{{ order.id }} - {{ order.customer.name }}</li> 
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h4>Completed</h4>
+            <ul>
+                {% for order in completed_orders %}
+                    <li>Order #{{ order.id }} - {{ order.customer.name }}</li> 
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

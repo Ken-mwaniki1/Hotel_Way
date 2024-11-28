@@ -1,0 +1,43 @@
+{% extends 'main/main_base.html' %}
+
+{% block title %}Order Success - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="mb-4 text-center">Order Success</h2>
+
+  <div class="alert alert-success" role="alert">
+    Thank you for your payment! Your order has been successfully processed.
+  </div>
+
+  <!-- Order Summary -->
+  <h4>Order Summary for item id <<} {{ order.id }} {>> </h4>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Item Name</th>
+        <th>Quantity</th>
+        <th>Price (Ksh)</th>
+        <th>Total (Ksh)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in order_items_display %}
+      <tr>
+        <td>{{ item.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.price }}</td>
+        <td>{{ item.total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Total Amount -->
+  <h4 class="text-end">Total Amount Paid: <span class="text-success">Ksh {{ total_amount_paid }}</span></h4>
+
+  <!-- Payment Status -->
+  <h4 class="mt-4">Payment Status: <span class="text-primary">{{ payment_status }}</span></h4>
+<a href="{% url 'main:full_order' %}"><button class="btn btn-success">Track Order</button></a>
+</div>
+{% endblock %}

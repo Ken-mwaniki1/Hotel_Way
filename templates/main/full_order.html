@@ -1,0 +1,51 @@
+{% extends 'main/main_base.html' %}
+
+{% block title %}Your Order - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="mb-4 text-center">Your Order</h2>
+
+  <form method="post" class="mb-4"> 
+    {% csrf_token %}
+    <div class="input-group">
+      <input type="text" class="form-control" name="track_id" placeholder="Enter Track ID">
+      <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+  </form>
+
+  {% if order %}
+    <h3>Order Details</h3>
+    <p>Customer ID: {{ order.customer_id }}</p> 
+    <p>Status: 
+      <span 
+        {% if order.status == 'completed' %} style="color: green;"
+        {% elif order.status == 'pending' %} style="color: brown;" 
+        {% else %} style="color: red;" 
+        {% endif %}>
+        {{ order.status }}
+      </span>
+    </p> 
+    <p>Payment Status: 
+      <span 
+        {% if order.payment_status == 'ready' %} style="color: green;"
+        {% elif order.payment_status == 'pending' %} style="color: brown;" 
+        {% else %} style="color: red;" 
+        {% endif %}>
+        {{ order.payment_status }} 
+      </span>
+    </p>
+
+    {% if order.status == 'completed' and order.payment_status == 'pending' %}
+      <a href="{% url 'main:process_payment' order.id %}" class="btn btn-primary">Make Payment</a> 
+    {% endif %}
+
+    <p>Order Items:</p> 
+    <ul>
+      {% for item in order.order_items.all %} 
+      <li>{{ item.name }} x {{ item.quantity }}</li> 
+      {% endfor %}
+    </ul>
+{% endif %} 
+</div>
+{% endblock %}

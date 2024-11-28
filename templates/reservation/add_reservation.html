@@ -1,0 +1,15 @@
+{% extends 'main/main_base.html' %}
+
+{% block title %}Add Reservation - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center">Add Reservation</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}  
+        <button type="submit" class="btn btn-primary">Add Reservation</button>
+    </form>
+</div>
+{% endblock %}

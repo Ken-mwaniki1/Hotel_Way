@@ -1,0 +1,15 @@
+{% extends 'base_manager.html' %}
+
+{% block title %}Delete Staff Member - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Delete Staff Member</h2>
+    <p>Are you sure you want to delete <b>{{ staff.name }}</b> ({{ staff.position }})?</p> 
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Confirm Delete</button>
+        <a href="{% url 'manager:reservation_management' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'template_base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}Order - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="mb-4 text-center">Place Your Order</h2>
+
+  <form method="post" action="{% url 'main:order' %}" id="order-form">
+    {% csrf_token %}
+
+    <!-- Customer Name -->
+    <div class="mb-3">
+      <label for="customer_name" class="form-label">Customer Name:</label>
+      <input type="text" class="form-control" id="customer_name" name="customer_name"
+        value="{% if reservation %}{{ reservation.customer_name }}{% endif %}" 
+        {% if reservation %}readonly{% endif %}>
+    </div>
+
+    <!-- Hidden input for guest ID and customer ID -->
+    <input type="hidden" id="guest_id" name="guest_id" value="{{ guest_id }}">
+    <input type="hidden" id="customer_id" name="customer_id" value="{{ customer_id }}">
+
+    <!-- Room Status (Preloaded or defaulted to "General") -->
+    <div class="mb-3">
+      <label for="room_status" class="form-label">Room Status:</label>
+      <input type="text" class="form-control" id="room_status" name="room_status" 
+        value="{{ room_status }}" readonly>
+    </div>
+
+    <!-- Dropdown for Menu Items -->
+    <div class="mb-3">
+      <label for="item_selector" class="form-label">Select Item:</label>
+      <select class="form-select" id="item_selector">
+        <option value="" disabled selected>Choose an item</option>
+        {% for item in items_data %}
+        <option value="{{ item.id }}" 
+                data-item-id="{{ item.id }}"
+                data-item-name="{{ item.name }}"
+                data-item-price="{{ item.price }}"
+                data-item-quantity="{{ item.quantity }}">
+          {{ item.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Item Details (Preload if data exists) -->
+    <div id="item_details" class="border p-3 rounded mb-3" style="display: none;">
+      <div class="mb-3">
+        <label for="item_name" class="form-label">Item Name:</label>
+        <input type="text" id="item_name" name="item_name" class="form-control" readonly>
+      </div>
+      <div class="mb-3">
+        <label for="item_price" class="form-label">Price:</label>
+        <input type="text" id="item_price" name="item_price" class="form-control" readonly>
+      </div>
+      <div class="mb-3">
+        <label for="item_quantity" class="form-label">Quantity:</label>
+        <input type="number" id="item_quantity" name="item_quantity" class="form-control" min="0">
+      </div>
+      <div class="mb-3">
+        <label for="item_total" class="form-label">Total:</label>
+        <input type="text" id="item_total" class="form-control" readonly>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary">Confirm Order</button>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Get the guest_id and customer_id values from hidden inputs
+    let guest_id = document.getElementById('guest_id').value;
+    let customer_id = document.getElementById('customer_id').value;
+    let room_status = document.getElementById('room_status').value;
+
+    // If guest_id or customer_id is not available, generate random IDs
+    if (!guest_id) {
+      guest_id = 'guest_' + Math.floor(Math.random() * 10000);
+      document.getElementById('guest_id').value = guest_id;
+      room_status = "General";  // Default to General status if no reservation
+    }
+
+    if (!customer_id) {
+      customer_id = 32 * Math.floor(Math.random() * (9999 - 1867) + 1867);  // Generate customer ID
+      document.getElementById('customer_id').value = customer_id;
+    }
+
+    // Update the reservation room status dynamically based on the session
+    document.getElementById('room_status').value = room_status;
+
+    // Now you can perform other session management or data processing tasks here
+  });
+
+  // Dropdown change event to load item details
+  document.getElementById('item_selector').addEventListener('change', function () {
+    const selectedOption = this.options[this.selectedIndex];
+
+    // Get data attributes from the selected option
+    const itemId = selectedOption.getAttribute('data-item-id');
+    const itemName = selectedOption.getAttribute('data-item-name');
+    const itemPrice = parseFloat(selectedOption.getAttribute('data-item-price')) || 0;
+    const itemQuantity = parseInt(selectedOption.getAttribute('data-item-quantity')) || 0;
+
+    // Populate the item details fields
+    document.getElementById('item_name').value = itemName;
+    document.getElementById('item_price').value = itemPrice.toFixed(2);
+    document.getElementById('item_quantity').value = itemQuantity;
+
+    // Calculate the total
+    const itemTotal = document.getElementById('item_total');
+    itemTotal.value = (itemPrice * itemQuantity).toFixed(2);
+
+    // Show the item details form
+    document.getElementById('item_details').style.display = 'block';
+
+    // Update total dynamically when quantity changes
+    document.getElementById('item_quantity').addEventListener('input', function () {
+      itemTotal.value = (itemPrice * parseInt(this.value || 0)).toFixed(2);
+    });
+  });
+</script>
+
+{% endblock %}

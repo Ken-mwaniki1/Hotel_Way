@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Check-in Error - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Check-in Error</h2>
+
+    <div class="alert alert-danger" role="alert">
+        {% if error_message %}
+            {{ error_message }}
+        {% else %}
+            There was an error during check-in. Please try again.
+        {% endif %}
+    </div>
+
+    <p class="text-center mt-4">
+        <a href="{% url 'reception:reservation_management' %}" class="btn btn-primary">Back to Reservations</a>
+    </p>
+
+</div>
+{% endblock %}

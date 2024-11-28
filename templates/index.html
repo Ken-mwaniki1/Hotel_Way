@@ -1,0 +1,37 @@
+{% extends 'template_base.html' %} 
+
+{% block title %}Hotel Way - Welcome{% endblock %}
+
+{% block content %}
+    <section class="hero text-center p-5">
+        <h2>Experience Luxury and Comfort</h2>
+        <p>Discover our world-class accommodations and delectable cuisine.</p>
+        <a href="{% url 'main:add_reservation' %}" class="btn btn-success">Book a Room</a> 
+        <a href="{% url 'main:menu' %}" class="btn btn-dark">Order Food</a> 
+    </section>
+
+    <section class="services container my-5">
+        <h2 class="text-center mb-4">Our Services</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <img src="..." class="card-img-top" alt="Accommodation"> 
+                    <div class="card-body">
+                        <h5 class="card-title">Accommodation</h5>
+                        <p class="card-text">Luxurious rooms and suites for a comfortable stay.</p> 
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <img src="..." class="card-img-top" alt="Dining"> 
+                    <div class="card-body">
+                        <h5 class="card-title">Dining</h5>
+                        <p class="card-text">A culinary experience to remember with diverse menus.</p> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

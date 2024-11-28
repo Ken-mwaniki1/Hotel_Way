@@ -1,0 +1,16 @@
+{% extends 'base.html' %} 
+
+{% block title %}Cancel Reservation - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Cancel Reservation</h2>
+    <p>Are you sure you want to cancel the reservation for {{ reservation.guest.name }} (Room {{ reservation.room.room_number }})?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+        <a href="{% url 'reception:reservation_management' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

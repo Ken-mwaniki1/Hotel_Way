@@ -1,0 +1,24 @@
+{% extends 'template_base.html' %}
+
+{% block title %}Payment and Billing{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2>Payment and Billing</h2>
+
+    <h3>Reservation Details</h3>
+    <p>Guest Name: {{ reservation.guest.name }}</p> 
+    <p>Room Number: {{ reservation.room.room_number }}</p> 
+    <p>Check-in Date: {{ reservation.check_in_date }}</p>
+    <p>Check-out Date: {{ reservation.check_out_date }}</p>
+
+    <h3>Payment Details</h3>
+    <p>Total Amount Due: ${{ total_amount_due }}</p> 
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} 
+        <button type="submit" class="btn btn-primary">Make Payment</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'template_base.html' %}
+{% load custom_filters %} 
+
+{% block title %}Confirm Order - Hotel Way{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center">Confirm Order</h2>
+
+    <form method="post" action="{% url 'main:order_confirmation' order.id %}"> 
+        {% csrf_token %}
+
+        {{ form.customer_name }}
+        {{ form.customer_id }}
+        {{ form.guest_id }} 
+
+        <h3>Order Items </h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Total</th>
+                </tr>
+            </thead>
+            <tbody> 1 
+                {% for item in order_items_display %} 
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.quantity }}</td> 
+                        <td>Ksh {{ item.price }}</td>
+                        <td>Ksh {{ item.price|multiply:item.quantity }}</td> 
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p class="text-end"><strong>Total: Ksh <span id="cart-total">{{ order.get_total_cost }}</span></strong></p> 
+
+        <button type="submit" class="btn btn-primary">Confirm Order</button>
+    </form>
+</div>
+{% endblock %}
