@@ -150,13 +150,13 @@ class Invoice(models.Model):
         return f"Invoice for {self.order}"
 
 class Customer(models.Model):
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+    customer_name = models.CharField(max_length=100)
+    guast_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.customer_name} {self.guast_name}"
 
 
 class Payment(models.Model):

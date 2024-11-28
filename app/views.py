@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.utils.timezone import now as timezone_now
 from django.http import HttpResponse, JsonResponse
+
+
 def add_menu_item(request):
     if request.method == 'POST':
         form = MenuItemForm(request.POST, request.FILES)
@@ -57,6 +59,7 @@ def delete_item(request, item_id):
         return redirect('manager:item_management')
     context = {'item': menu_item}
     return render(request, 'manager/delete_item.html', context)
+
 def add_to_order(request, item_id):
     order_items = request.session.get('order_items', {})
     item = MenuItem.objects.get(pk=item_id)
@@ -69,28 +72,8 @@ def add_to_order(request, item_id):
     request.session['order_items'] = order_items
     return redirect('full_order')
 
-def checkout(request):
-    # Clear the order items from the session
-    if 'order_items' in request.session:
-        del request.session['order_items']
-
-    return render(request, 'main/checkout_success.html')
-
-
-def reservation_management(request):
-    # Fetch all reservations
-    reservations = Reservation.objects.all()
-
-    # Prepare context for rendering
-    context = {'reservations': reservations}
-
-    return render(request, 'manager/reservation_management.html', context)
-
-
 def menu(request):
     menu_items = MenuItem.objects.filter(availability=True)
-
-    # Convert menu items to JSON
     menu_items_json = []
     for item in menu_items:
         menu_items_json.append({
@@ -102,42 +85,37 @@ def menu(request):
         })
 
     if request.method == 'POST':
-        # Get the JSON string of selected items from the form
         selected_items_json = request.POST.get('order_items')
 
         try:
             selected_items = json.loads(selected_items_json)
 
-            # Create the order object
             order = Order()
             order.customer_name = request.POST.get('customer_name', '')
             if request.user.is_authenticated:
                 order.customer_id = 32 * random.randint(153, 999)
 
-                # Generate a valid guest_id that exists in the app_guest table
                 while True:
                     guest_id = random.randint(1855, 9999)
                     if Guest.objects.filter(id=guest_id).exists():
                         break
                 order.guest_id = guest_id
             else:
-                order.customer_id = order.customer_name  # Use customer name as ID for non-premium
-                order.guest_id = None  # No guest ID for non-premium
+                order.customer_id = order.customer_name
+                order.guest_id = None
 
             order.created_at = timezone.now()
             order.order_items = selected_items
             order.save()
 
-            # Store selected_items in a cookie
             response = redirect('main:order_confirmation', order_id=order.id)
             response.set_cookie('selected_items', json.dumps(selected_items))
             return response
 
         except json.JSONDecodeError as e:
             print(f"Error parsing selected_items: {e}")
-            # Handle the error, e.g., redirect back to menu with an error message
 
-    # Create the response first
+
     response = render(request, 'main/menu.html', {
         'menu_items': menu_items,
         'menu_items_json': json.dumps(menu_items_json),
@@ -145,7 +123,6 @@ def menu(request):
 
     request.session['menu_items'] = menu_items_json
 
-    # Finally, return the response
     return response
 
 
@@ -167,7 +144,7 @@ def order(request, reservation_id=None):
         # Initialize form data
         initial_data = {
             'customer_name': customer_name,
-            'order_items': json.dumps(order_items),  # Store items as JSON
+            'order_items': json.dumps(order_items),
         }
         form = OrderForm(initial=initial_data)
 
@@ -232,8 +209,8 @@ def order_confirmation(request, order_id):
             # If no customer exists with this ID, generate a new one
             customer_id = 32 * random.randint(1867, 9999)  # Generate customer_id based on your formula
             customer = Customer.objects.create(
-                first_name="Customer",
-                last_name=str(customer_id),
+                customer_name="Customer",  # Corrected field name
+                guast_name=str(customer_id),  # Corrected field name
                 email="customer_" + str(customer_id) + "@hotel.com",  # Assign an email to this customer
                 phone_number="032" + str(random.randint(1000000, 9999999))  # Generate a random phone number
             )
@@ -246,13 +223,24 @@ def order_confirmation(request, order_id):
         print(f"Error saving order: {e}")
         return redirect('error_page')  # Redirect to an error page or handle the error gracefully
 
-    # Prepare the order items for display
+    # Parse the order_items JSON stored in the order object
+    try:
+        # Ensure the JSON string in the order is valid and parsed correctly
+        raw_order_items = order.order_items.replace("'", '"')  # Fix for potential single-quote issues
+        order_items = json.loads(raw_order_items)
+    except (json.JSONDecodeError, TypeError):
+        order_items = []  # Set to empty list if parsing fails
+
+        # Prepare the order items for display
     order_items_display = []
     total_price = 0
-    for item_data in selected_items:
+    for item_data in order_items:
         try:
+            # Fetch the MenuItem from the database using the ID in the JSON
             menu_item = MenuItem.objects.get(id=item_data['id'])
-            item_total = menu_item.price * item_data['quantity']
+            item_total = menu_item.price * int(item_data['quantity'])  # Convert quantity to int for calculations
+
+            # Add item details to the display list
             order_items_display.append({
                 'name': menu_item.name,
                 'quantity': item_data['quantity'],
@@ -261,8 +249,10 @@ def order_confirmation(request, order_id):
             })
             total_price += item_total
         except MenuItem.DoesNotExist:
-            pass  # Handle the case where the menu item doesn't exist
+            # Log the missing item or handle gracefully
+            print(f"Menu item with ID {item_data['id']} not found in the database.")
 
+    # Add context data for rendering the template
     context = {
         'order': order,
         'order_items_display': order_items_display,
@@ -308,7 +298,7 @@ def process_payment(request, order_id):
     except (json.JSONDecodeError, TypeError):
         order_items = []
 
-    order_items_display = []  # Items for rendering in the template
+    order_items_display = []
     total_amount_due = 0
 
     for item_data in order_items:
@@ -323,7 +313,7 @@ def process_payment(request, order_id):
             })
             total_amount_due += item_total
         except MenuItem.DoesNotExist:
-            pass  # Handle missing items gracefully
+            pass
 
     # Context for the template
     context = {
@@ -393,39 +383,63 @@ def add_reservation(request):
     if request.method == 'POST':
         form = ReservationForm(request.POST)
         if form.is_valid():
-            # Save the reservation form to create a new reservation instance
-            reservation = form.save()
+            room = form.cleaned_data.get('room')
 
-            # Generate JSON for order items with quantity set to '1'
-            order_items_json = json.dumps([{
-                'id': reservation.room.id if reservation.room else None,
-                'name': f"{reservation.room.room_type} Room",
-                'quantity': '1',  # Set the quantity to '1'
-                'price': reservation.room.price,
-            }])
+            if room:
+                reservation = form.save()
 
-            # Create an order associated with the reservation
-            order = Order.objects.create(
-                customer_name=reservation.name,
-                order_items=order_items_json,
-                items=f"Reservation for {reservation.room_type} Room",
-                status='pending',
-                payment_status='order_not_served',
-                guest=reservation.guest,
-                customer=reservation.customer  # Make sure this is set correctly
-            )
+                order_items_json = json.dumps([{
+                    'id': room.id,
+                    'name': f"{room.room_type} Room",
+                    'quantity': int(1),
+                    'price': str(room.price),
+                }])
 
-            # Redirect to the order confirmation page with the order ID
-            messages.success(request, "Reservation made successfully. Redirecting to order confirmation...")
-            return redirect('main:order_confirmation', order_id=order.id)
+                while True:
+                    customer_id = random.randint(1000, 9999)
+                    if not Customer.objects.filter(id=customer_id).exists():
+                        break
+
+                while True:
+                    guest_id = random.randint(1000, 9999)
+                    if not Guest.objects.filter(id=guest_id).exists():
+                        break
+
+                customer_email = f"customer_{customer_id}@hotel.com"
+                guest_email = f"guest_{guest_id}@hotel.com"
+
+                customer, created = Customer.objects.get_or_create(
+                    id=customer_id,
+                    defaults={'customer_name': reservation.name, 'email': customer_email}
+                )
+
+                guest, created = Guest.objects.get_or_create(
+                    id=guest_id,
+                    defaults={'first_name': reservation.name, 'email': guest_email}
+                )
+
+                order = Order.objects.create(
+                    customer_name=reservation.name,
+                    order_items=order_items_json,
+                    items=f"Reservation for {reservation.room_type} Room",
+                    status='pending',
+                    payment_status='order_not_served',
+                    guest=guest,
+                    customer=customer
+                )
+
+                messages.success(request, "Reservation made successfully. Redirecting to order confirmation...")
+                return redirect('main:order_confirmation', order_id=order.id)
+
+            else:
+                messages.error(request, "Please select a room.")
+                return render(request, 'main/reservations.html', {'form': form})
 
         else:
-            # Handle invalid form submission
             messages.error(request, "There was an error with your reservation form.")
             return render(request, 'main/reservations.html', {'form': form})
 
     else:
-        # Display the reservation form for GET requests
         form = ReservationForm()
         return render(request, 'main/reservations.html', {'form': form})
 
@@ -754,19 +768,6 @@ def payment_billing_summary(request, reservation_id):
         'total_amount_due': total_amount_due,
     }
     return render(request, 'reception/payment_billing_summary.html', context)
-def user_login(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')  # Redirect to the dashboard or home page after login
-        else:
-            messages.error(request, 'Invalid username or password.')
-
-    return render(request, 'accounts/login.html')
 
 def check_in_success(request):
     return render(request, 'reception/check_in_success.html')

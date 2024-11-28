@@ -54,8 +54,6 @@ class GuestForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'rows': 3, 'cols': 40}),
         }
 
-
-
 class ReservationForm(forms.ModelForm):
     class Meta:
         model = Reservation
@@ -83,20 +81,22 @@ class ReservationForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ReservationForm, self).__init__(*args, **kwargs)
-        if 'room_type' in self.data:  # If the room type is already selected
-            room_type = self.data.get('room_type')
-            self.fields['room'].queryset = Room.objects.filter(room_type=room_type, availability=True)
-        else:
-            self.fields['room'].queryset = Room.objects.none()  # Set rooms to none initaly
-
-    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Set initial values and attributes for form fields
         self.fields['name'].widget.attrs.update({'class': 'form-control'})
         self.fields['email'].widget.attrs.update({'class': 'form-control'})
         self.fields['room_type'].widget.attrs.update({'class': 'form-select'})
         self.fields['num_guests'].widget.attrs.update({'class': 'form-control', 'min': 1})
+
+        if 'room_type' in self.data:
+            try:
+                room_type = self.data.get('room_type')
+                self.fields['room'].queryset = Room.objects.filter(room_type=room_type, availability=True)
+            except (ValueError, TypeError):
+                pass  # Invalid room_type value, ignore
+        else:
+            self.fields['room'].queryset = Room.objects.none()
 
 
 class PaymentForm(forms.ModelForm):

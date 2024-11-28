@@ -20,8 +20,6 @@ urlpatterns = [
     path('full_order/', views.full_order, name='full_order'),
     path('process_payment/<int:order_id>/', views.process_payment, name='process_payment'),
 
-    path('checkout/', views.checkout, name='checkout'),
-
     path('reservations/', views.add_reservation, name='add_reservation'),
     path('get_available_rooms/', views.get_available_rooms, name='get_available_rooms'),  # New URL for room type selection
     path('reservations/success/', views.reservation_success, name='reservation_success'),

@@ -9,7 +9,6 @@ urlpatterns = [
     path('', views.index, name="index"),
     path('', views.index, name="home"),
     path('menu/', views.menu, name="menu"),
-    path('login/', views.user_login, name='login'),
     path('order/<str:room_number>/', views.order, name='order'),  # Use room_number for reservation
     path('order/confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
     path('reception/', include(('app.reception_urls', 'reception'), namespace='reception')),
