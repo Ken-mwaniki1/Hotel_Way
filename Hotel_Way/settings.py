@@ -87,9 +87,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': "hotel_sys",
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
+        'USER': 'root_',
+        'PASSWORD': '@1!x1524',
+        'HOST': 'popo.mysql.database.azure.com',
         'PORT': '3306',
     }
 }
