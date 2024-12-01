@@ -1,6 +1,6 @@
 termux-setup-storage  # Corrected command for setting up storage
 pkg update && pkg upgrade -y
-pkg install python python-pip mariadb
+pkg install python python-pip mariadb git
 
 # Set environment variables for proper compilation
 export LDFLAGS="-L/data/data/com.termux/files/usr/lib"
