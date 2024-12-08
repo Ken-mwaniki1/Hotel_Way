@@ -17,7 +17,10 @@ urlpatterns = [
     path('order/success/<int:order_id>/', views.order_success, name='order_success'),
 
     path('add_to_order/<int:item_id>/', views.add_to_order, name='add_to_order'),
+    
     path('full_order/', views.full_order, name='full_order'),
+   # path('full_order/<int:order_id>/', views.full_order, name='full_order_with_id'),
+    
     path('process_payment/<int:order_id>/', views.process_payment, name='process_payment'),
 
     path('reservations/', views.add_reservation, name='add_reservation'),

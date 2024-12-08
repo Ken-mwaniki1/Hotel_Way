@@ -148,18 +148,15 @@ def menu(request):
                 }
             )
             order.customer = customer
-
-            
             
 
             if request.user.is_authenticated:
-                while True:
-                    guest_id = random.randint(1855, 9999)
-                    if Guest.objects.filter(id=guest_id).exists():
-                        break
-                order.guest_id = guest_id
+                guest_id = random.randint(1855, 9999)
+                guest, created = Guest.objects.get_or_create(id=guest_id)
+                order.guest_id = guest.id
             else:
-                order.guest_id = None
+                guest.id =None
+
 
             order.created_at = timezone.now()
             order.order_items = selected_items
