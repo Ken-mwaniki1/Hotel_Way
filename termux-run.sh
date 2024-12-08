@@ -1,6 +1,6 @@
 termux-setup-storage  # Corrected command for setting up storage
 pkg update && pkg upgrade -y
-pkg install python python-pip mariadb git
+pkg install python python-pip mariadb
 
 # Set environment variables for proper compilation
 export LDFLAGS="-L/data/data/com.termux/files/usr/lib"
@@ -16,8 +16,8 @@ source ~/.venv/bin/activate
 #cd to phone root
 cd storage/shared
 
-git clone https://github.com/Ken-mwaniki1/Hotel_Way Hotel_Way
-cd Hotel_Way
+git clone https://github.com/pgwiz/RentBin RentBin
+cd RentBin
 
 # Install project dependencies
 pip install -r requirements.txt 

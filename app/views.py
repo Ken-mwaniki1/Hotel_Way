@@ -3,18 +3,57 @@ import random
 import threading
 from django.db import IntegrityError
 from . import models
+from django.contrib.auth.decorators import login_required
 from .models import Order, Reservation, Room, Invoice, Guest, Staff, MenuItem, Customer
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .forms import OrderForm, MenuItemForm, GuestForm, RoomForm, PaymentForm, StaffForm ,Guest,Payment, Staff, Room, Reservation, ReservationForm  # Assuming you have a ReservationForm
+from .forms import OrderForm, MenuItemForm, GuestForm, RoomForm, PaymentForm, StaffForm ,Guest,Payment, Staff, Room, Reservation, ReservationForm , CustomUserCreationForm, CustomAuthenticationForm
 from django.db.models import Sum, Count, Avg
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.utils.timezone import now as timezone_now
 from django.http import HttpResponse, JsonResponse
 
+def login_view(request):
+    if request.method == 'POST':
+        form = CustomAuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')  # Adjust if using email
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=username, password=password)
+            if user:
+                login(request, user)
+                return redirect('home')
+            else:
+                messages.error(request, 'Invalid username or password.')
+        else:
+            messages.error(request, 'Invalid form submission.')
+    else:
+        form = CustomAuthenticationForm()
 
+    return render(request, 'login.html', {'form': form})
+        
+
+def create_account(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_superuser = True
+            user.is_staff = True
+            user.save()
+            messages.success(request, 'Account created successfully. Please log in.')
+            return redirect('login')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CustomUserCreationForm()
+
+    return render(request, 'create_account.html', {'form': form})
+        
+        
+@login_required        
 def add_menu_item(request):
     if request.method == 'POST':
         form = MenuItemForm(request.POST, request.FILES)
@@ -25,7 +64,7 @@ def add_menu_item(request):
         form = MenuItemForm()
     return render(request, 'manager/add_menu_item.html', {'form': form})
 
-
+@login_required   
 def item_management(request):
     menu_items = MenuItem.objects.all()
 
@@ -51,7 +90,7 @@ def item_management(request):
     }
     return render(request, 'manager/item_management.html', context)
 
-
+@login_required   
 def delete_item(request, item_id):
     menu_item = get_object_or_404(MenuItem, id=item_id)
     if request.method == 'POST':
@@ -71,6 +110,8 @@ def add_to_order(request, item_id):
 
     request.session['order_items'] = order_items
     return redirect('full_order')
+
+
 
 def menu(request):
     menu_items = MenuItem.objects.filter(availability=True)
@@ -92,16 +133,32 @@ def menu(request):
 
             order = Order()
             order.customer_name = request.POST.get('customer_name', '')
-            if request.user.is_authenticated:
-                order.customer_id = 32 * random.randint(153, 999)
 
+            # Generate random customer_id
+            customer_id = 32 * random.randint(1867, 9999)
+            
+            
+            customer, created = Customer.objects.get_or_create(
+                id=customer_id,
+                defaults={
+                    'customer_name': f"Customer {customer_id}",  # Dynamic name
+                    'guast_name': str(customer_id),  # Corrected field name
+                    'email': f"customer_{customer_id}@hotel.com",  # Assign dynamic email
+                    'phone_number': f"032{random.randint(1000000, 9999999)}"  # Random phone number
+                }
+            )
+            order.customer = customer
+
+            
+            
+
+            if request.user.is_authenticated:
                 while True:
                     guest_id = random.randint(1855, 9999)
                     if Guest.objects.filter(id=guest_id).exists():
                         break
                 order.guest_id = guest_id
             else:
-                order.customer_id = order.customer_name
                 order.guest_id = None
 
             order.created_at = timezone.now()
@@ -115,7 +172,6 @@ def menu(request):
         except json.JSONDecodeError as e:
             print(f"Error parsing selected_items: {e}")
 
-
     response = render(request, 'main/menu.html', {
         'menu_items': menu_items,
         'menu_items_json': json.dumps(menu_items_json),
@@ -124,8 +180,7 @@ def menu(request):
     request.session['menu_items'] = menu_items_json
 
     return response
-
-
+    
 def order(request, reservation_id=None):
     """
     Handles order creation with or without a reservation.
@@ -453,7 +508,8 @@ def get_available_rooms(request):
 
 def reservation_success(request):
     return render(request, 'main/reservation_success.html')
-
+    
+@login_required   
 def edit_reservation(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id)
 
@@ -468,6 +524,7 @@ def edit_reservation(request, reservation_id):
     context = {'form': form, 'reservation': reservation}
     return render(request, 'reception/edit_reservation.html', context)
 
+@login_required   
 def cancel_reservation(request, reservation_id):
     reservation = get_object_or_404(Reservation, pk=reservation_id)
 
@@ -478,13 +535,15 @@ def cancel_reservation(request, reservation_id):
 
     context = {'reservation': reservation}
     return render(request, 'reception/cancel_reservation.html', context)
+@login_required       
 def delete_reservation(request, reservation_id):
     reservation = get_object_or_404(Reservation, pk=reservation_id)
     if request.method == 'POST':
         reservation.delete()
         return redirect('manager:reservation_management')
     return render(request, 'manager/delete_reservation.html', {'reservation': reservation})
-
+        
+@login_required   
 def edit_staff(request, staff_id):
     staff = get_object_or_404(Staff, pk=staff_id)
     if request.method == 'POST':
@@ -497,27 +556,21 @@ def edit_staff(request, staff_id):
     return render(request, 'manager/edit_staff.html', {'form': form, 'staff': staff})
 
 
+@login_required   
 def delete_staff(request, staff_id):
     staff = get_object_or_404(Staff, pk=staff_id)
     if request.method == 'POST':
         staff.delete()
         return redirect('manager:reservation_management')
     return render(request, 'manager/delete_staff.html', {'staff': staff})
-
+        
+@login_required   
 def manager_dashboard(request):
     # Get the total number of reservations
     total_reservations = Reservation.objects.count()
-
-    # Get the total number of guests
     total_guests = Guest.objects.count()
-
-    # Calculate total revenue (replace with your actual revenue calculation logic)
     total_revenue = Payment.objects.aggregate(Sum('amount'))['amount__sum']
-
-    # Get the total number of rooms
     total_rooms = Room.objects.count()
-
-    # Get the number of available rooms
     available_rooms = Room.objects.filter(availability=True).count()
 
     # Calculate the occupancy rate
@@ -526,11 +579,7 @@ def manager_dashboard(request):
         if total_rooms > 0
         else 0
     )
-
-    # Geting the total number of staff members
     staff_count = Staff.objects.count()
-
-    # Geting the latest reservations (e.g., the last 5)
     latest_reservations = Reservation.objects.all().order_by('-check_in_date')[:5]
 
     context = {
@@ -543,6 +592,7 @@ def manager_dashboard(request):
     }
     return render(request, 'manager/dashboard.html', context)
 
+@login_required   
 def checkin_checkout(request, reservation_id):
     reservation = get_object_or_404(Reservation, pk=reservation_id)
     context = {'reservation': reservation}
@@ -565,17 +615,11 @@ def index(request):
 def home(request):
     return render(request, 'home.html')
 
+@login_required
 def dashboard(request):
-    # Get the total number of reservations
     total_reservations = Reservation.objects.count()
-
-    # Get the total number of guests
     total_guests = Guest.objects.count()
-
-    # Get the total number of rooms
     total_rooms = Room.objects.count()
-
-    # Get the number of available rooms
     available_rooms = Room.objects.filter(availability=True).count()
 
     # Calculate the occupancy rate (percentage of occupied rooms)
@@ -584,8 +628,6 @@ def dashboard(request):
         if total_rooms > 0
         else 0
     )
-
-    # Get the latest reservations (e.g., the last 5)
     latest_reservations = Reservation.objects.all().order_by('-check_in_date')[:5]
 
     context = {
@@ -598,16 +640,19 @@ def dashboard(request):
     }
     return render(request, 'reception/dashboard.html', context)
 
+@login_required   
 def order_management(request):
     orders = Order.objects.all()
     return render(request, 'reception/order_management.html', {'orders': orders})
 
+@login_required   
 def send_to_kitchen(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     order.status = 'in progress'  # Change to the new intermediate status
     order.save()
     return redirect('reception:order_management')
 
+@login_required   
 def mark_as_complete(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     order.status = 'completed'
@@ -615,6 +660,7 @@ def mark_as_complete(request, order_id):
     order.save()
     return redirect('reception:order_management')
 
+@login_required   
 def reservation_management(request):
     reservations = Reservation.objects.all()
 
@@ -632,46 +678,43 @@ def reservation_management(request):
     }
     return render(request, 'reception/reservation_management.html', context)
 
+@login_required   
 def reservation_cancelled(request, reservation_id):
     reservation = get_object_or_404(Reservation, pk=reservation_id)
     context = {'reservation': reservation}
     return render(request, 'reception/reservation_cancelled.html', context)
 
+@login_required   
 def guest_check_in(request, reservation_id):
     # Fetch the reservation by ID
     reservation = get_object_or_404(Reservation, id=reservation_id)
 
     if reservation.status == 'Pending':
-        # Update reservation status to 'Checked-in'
+        
         reservation.status = 'Checked-in'
         reservation.save()
         return render(request, 'reception/check_in_success.html', {'reservation': reservation})
     else:
-        # Handle other status cases
+        
         return render(request, 'reception/check_in_error.html', {'reservation': reservation})
 
-
+@login_required   
 def guest_cancel(request, reservation_id):
-    # Fetch the reservation by ID
     reservation = get_object_or_404(Reservation, id=reservation_id)
-
-    # Update reservation status to 'Cancelled'
+    
     reservation.status = 'Cancelled'
     reservation.save()
     return render(request, 'reception/reservation_cancelled.html', {'reservation': reservation})
 
+@login_required   
 def status_management(request):
-    # Fetch reservations based on their statuses
     pending_reservations = Reservation.objects.filter(status='pending')
     checked_in_reservations = Reservation.objects.filter(status='checked-in')
     cancelled_reservations = Reservation.objects.filter(status='cancelled')
-
-    # Fetching the orders based on their statuses
     pending_orders = Order.objects.filter(status='pending')
     in_progress_orders = Order.objects.filter(status='in progress')
     completed_orders = Order.objects.filter(status='completed')
-
-    # Prepare context for rendering
+    
     context = {
         'pending_reservations': pending_reservations,
         'checked_in_reservations': checked_in_reservations,
@@ -683,6 +726,7 @@ def status_management(request):
 
     return render(request, 'reception/status_management.html', context)
 
+@login_required   
 def room_management(request):
     rooms = Room.objects.all()
 
@@ -708,7 +752,7 @@ def room_management(request):
     }
     return render(request, 'manager/room_management.html', context)
 
-
+@login_required   
 def delete_room(request, room_id):
     room = get_object_or_404(Room, room_number=room_id)
     if request.method == 'POST':
@@ -746,6 +790,7 @@ def payment_billing(request, reservation_id):
 
 
 
+@login_required   
 def payment_billing_summary(request, reservation_id):
     reservation = get_object_or_404(Reservation, pk=reservation_id)
 
@@ -768,6 +813,7 @@ def payment_billing_summary(request, reservation_id):
         'total_amount_due': total_amount_due,
     }
     return render(request, 'reception/payment_billing_summary.html', context)
+
 
 def check_in_success(request):
     return render(request, 'reception/check_in_success.html')

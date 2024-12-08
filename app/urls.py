@@ -5,10 +5,17 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+   # path('admin/', admin.site.urls),
     path('', views.index, name="index"),
     path('', views.index, name="home"),
     path('menu/', views.menu, name="menu"),
+    
+    path('login/', views.login_view, name='login'),
+    path('accounts/login/', views.login_view, name='login'),
+    
+    
+    path('create_account/', views.create_account, name='create_account'),
+
     path('order/<str:room_number>/', views.order, name='order'),  # Use room_number for reservation
     path('order/confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
     path('reception/', include(('app.reception_urls', 'reception'), namespace='reception')),

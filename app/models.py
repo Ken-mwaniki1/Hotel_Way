@@ -1,11 +1,37 @@
 from django.db import models
-
-from django.db import models
 from typing import Any
-
 import datetime
-
 from django import forms
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.db import models
+
+
+class User(AbstractUser):
+    email = models.EmailField(unique=True, db_index=True)
+    is_superadmin = models.BooleanField(default=False)
+
+    groups = models.ManyToManyField(
+        Group,
+        related_name="custom_user_groups",
+        blank=True,
+        help_text="The groups this user belongs to.",
+        verbose_name="groups",
+    )
+
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="custom_user_permissions",
+        blank=True,
+        help_text="Specific permissions for this user.",
+        verbose_name="user permissions",
+    )
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username"]
+
+    def __str__(self):
+        return self.email
+        
 
 class MenuItem(models.Model):
     name = models.CharField(max_length=255)
@@ -23,7 +49,7 @@ class Staff(models.Model):
     name = models.CharField(max_length=100)
     role = models.CharField(max_length=100)
     contact_info = models.CharField(max_length=255)
-    # add other fields as needed
+    highered = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
